@@ -6,17 +6,45 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
+const { request } = require('express');
+const mongoose = require('mongoose');
+
+// MONGO_URI = process.env.MONGO_URI; 
 
 const client = jwksClient ({
     jwksUri: 'http://dev-nt37xvb0.us.auth0.com/.well-known/jwks.json'
-})
-
+});
 const app = express();
 app.use(cors());
+// const bookSchema = new mongoose.Schema({
+//     name: {type: String, required: true},
+//     description: {type: String},
+//     status: {type: String} 
+// })
+const userSchema = new mongoose.Schema({
+    email: {type: String, required: true}, 
+    books: {type: Array}, 
+})
+
+const UserModel = mongoose.model('user', userSchema);
+
+mongoose.connect(process.env.MONGO_URI , {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(async () => {
+    console.log('DB connection Success for /user')
+
+let newUser = new UserModel({
+    email: 'hello email', 
+    books: ['hello books']}); 
+    await newUser.save(); 
+
+
+})
 
 const PORT = process.env.PORT || 3050; 
 
-// Follows along with Lab tutorial 
+
 
 function getKey(header, callback) {
     client.getSigningKey(header.kid, function(err, key) {
@@ -34,17 +62,6 @@ app.get('/user', (request, response) => {
         }
             response.send(user);
     });
-
-  // TODO: 
-  // STEP 1: get the jwt from the headers
-  // STEP 2. use the jsonwebtoken library to verify that it is a valid jwt
-  // jsonwebtoken dock - https://www.npmjs.com/package/jsonwebtoken
-  // STEP 3: to prove that everything is working correctly, send the opened jwt back to the front-end
 });
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
-
-//Domain
-//dev-nt37xvb0.us.auth0.com
-// ClientID 
-//xq8PHihp3RkyWMdVkjvU5hA92Wb9PrTf
