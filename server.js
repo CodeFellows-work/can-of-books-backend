@@ -7,20 +7,23 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
-const app = express();
-app.use(cors());
-
-const PORT = process.env.PORT || 3000;
-
-// Follows along with Lab tutorial 
 const client = jwksClient ({
     jwksUri: 'http://dev-nt37xvb0.us.auth0.com/.well-known/jwks.json'
 })
+
+const app = express();
+app.use(cors());
+
+const PORT = process.env.PORT || 3050; 
+
+// Follows along with Lab tutorial 
+
 function getKey(header, callback) {
     client.getSigningKey(header.kid, function(err, key) {
         const signInKey = key.publicKey || key.rsaPublicKey; 
         callback(null,signInKey); 
-    } )
+    
+    });
 }
 
 app.get('/user', (request, response) => {
@@ -37,8 +40,7 @@ app.get('/user', (request, response) => {
   // STEP 2. use the jsonwebtoken library to verify that it is a valid jwt
   // jsonwebtoken dock - https://www.npmjs.com/package/jsonwebtoken
   // STEP 3: to prove that everything is working correctly, send the opened jwt back to the front-end
-
-})
+});
 
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
 
