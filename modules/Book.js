@@ -16,14 +16,14 @@ function verifyToken(token, callback) {
         return callback(err); 
         }
         callback(user); 
-        }
-    )};
-    function getKey(header, callback) {
-        client.getSigningKey(header.kid, function(err, key) {
+    }
+)};
+function getKey(header, callback) {
+    client.getSigningKey(header.kid, function(err, key) {
         const signInKey = key.publicKey || key.rsaPublicKey; 
         callback(null, signInKey); 
-        });
-    }
+    });
+}
 const Book = {};
 
 Book.getAllBooks = async function(request, response) {
@@ -38,16 +38,16 @@ Book.getAllBooks = async function(request, response) {
             if(!person.length){
                 person[0] = { name, books: [] }
                 const newUser = new BookModel(person[0])
-                newUser.save();
+                newUser.save();  
+                response.send(person[0].books);
             }
-            response.send(person[0].books);
         });
     }
 }
 
 Book.addABook = async function(request, response) {
     const token = request.headers.authorization.split(' ')[1];
-    verifyToken(token, getBooks(user));
+    verifyToken(token, addBook(user));
 
     async function addBook(user) {
         const name = user.name;
@@ -64,7 +64,7 @@ Book.addABook = async function(request, response) {
 
 Book.deleteABook = async function(request, response) {
     const token = request.headers.authorization.split(' ')[1];
-    verifyToken(token, getBooks(user));
+    verifyToken(token, deleteBook(user));
     
     async function deleteBook(user) {
         const indexNum = request.params.index;
@@ -73,13 +73,32 @@ Book.deleteABook = async function(request, response) {
         
         await BookModel.find({name }, (err, person) => {
             if(err) console.log(err)
-            const newBookwArray = person[0].books.filter((book, i) => i !== index);
-            user[0].books = newBookArray;
-            user[0].save();
+            const newBookArray = person[0].books.filter((book, i) => i !== index);
+            person[0].books = newBookArray;
+            person[0].save();
             response.send('success!');
         })
     }
 }
-    
+
+Book.updateABook = async function(request, repsonse) { 
+    const token = request.headers.authroization.split(' ')[1]; 
+    verifyToken(token, updateBook(user));
+
+    async function updateBook(user) {
+        const indexNum = request.params.index;
+        const newBook = request.body.newBook;
+        const email = request.body.email;
+        const name = user.name; 
+        console.log({indexNum, newBook, email})
+
+        await BookModel.find({ name }, (err, person) => {
+            if(err) console.error(err);
+            person[0].books.splice(indexNum, 1, newBook);
+            person[0].save();
+            response.send(person[0].books);
+        })
+    }
+}
 
 module.exports = Book;

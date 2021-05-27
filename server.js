@@ -28,11 +28,12 @@ const db = mongoose.connection;
 
 db.on('error', (error) => console.error(error))
 db.once('open', () => {
-    app.listen(PORT, () => console.log(`SERVER IS UP on ${PORT}`));
+    console.log('Mongoose is Connected!');
 });
 
 app.get('/books', Book.getAllBooks);
 app.post('/books', Book.addABook);
 app.delete('/books/:index', Book.deleteABook);
+app.put('./books/:index', Book.updateABook);
 
-
+app.listen(PORT, () => console.log(`SERVER IS UP on ${PORT}`));
