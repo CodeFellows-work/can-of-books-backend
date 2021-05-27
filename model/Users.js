@@ -8,14 +8,13 @@ const bookSchema = new mongoose.Schema({
         description: {type: String},
         status: {type: String} 
     });
-const BookModel = mongoose.model('books', bookSchema);
 
 const userSchema = new mongoose.Schema({
     email: {type: String, required: true}, 
-    books: {type: Array}, 
+    books:  [bookSchema], 
 })
 const UserModel = mongoose.model('Users', userSchema);
 
-module.exports= {UserModel, BookModel}
+module.exports= UserModel;
 
 

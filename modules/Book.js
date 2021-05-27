@@ -1,12 +1,14 @@
 'use strict'; 
 
+// const cors = require('cors');
+// const express = require('express');
 const jwksClient = require('jwks-rsa');
 const jwt = require('jsonwebtoken');
-const BookModel = require('../model/Users');
+const UserModel = require('../model/Users');  
 const { verify } = require('crypto');
 
 const client = jwksClient ({
-    jwksUri: 'http://dev-nt37xvb0.us.auth0.com/.well-known/jwks.json'
+    jwksUri: 'https://dev-nt37xvb0.us.auth0.com/.well-known/jwks.json'
 });
 
 function verifyToken(token, callback) {
@@ -15,47 +17,54 @@ function verifyToken(token, callback) {
         console.error('Something Went Wrong');
         return callback(err); 
         }
+        
+        console.log({user});
         callback(user); 
     }
 )};
-function getKey(header, callback) {
-    client.getSigningKey(header.kid, function(err, key) {
-        const signInKey = key.publicKey || key.rsaPublicKey; 
-        callback(null, signInKey); 
+function getKey(headers, callback) {
+    client.getSigningKey(headers.kid, function(err, key) {
+        const signingKey = key.publicKey || key.rsaPublicKey; 
+        callback(null, signingKey); 
     });
 }
+
+// const app = express();
+// app.use(cors());
+// app.use(express.json());
 const Book = {};
 
 Book.getAllBooks = async function(request, response) {
     const token = request.headers.authorization.split(' ')[1];
-    verifyToken(token, getBooks(user));
+    verifyToken(token, getBooks);
     
     async function getBooks(user){
-    const name = user.name;
+    const email = user.email;
     
-    await BookModel.find({ name }, (err, person) => {
+    await UserModel.find({ email }, (err, person) => {
         if(err) console.error(err);
             if(!person.length){
-                person[0] = { name, books: [] }
-                const newUser = new BookModel(person[0])
+                person[0] = { email, books: [] }
+                const newUser = new UserModel(person[0])
                 newUser.save();  
-                response.send(person[0].books);
             }
+            response.send(person[0].books);
         });
     }
 }
 
 Book.addABook = async function(request, response) {
     const token = request.headers.authorization.split(' ')[1];
-    verifyToken(token, addBook(user));
+    console.log(token);
+    verifyToken(token, addBook);
 
     async function addBook(user) {
-        const name = user.name;
-        const {newBook, newBookAuthor} = request.query; 
+        const email = user.email;
+        const {nameOfBook, descriptionOfBook, statusOfBook} = request.query; 
         
-        await BookModel.find({ name }, (err, person) => {
+        await UserModel.find({ email }, (err, person) => {
             if(err) console.error(err);
-                person[0].books.push({title: newBook, author: newBookAuthor });
+                person[0].books.push({name: nameOfBook, description: descriptionOfBook, status: statusOfBook });
                 person[0].save();
                 response.send(person[0].books);
         });
@@ -64,14 +73,15 @@ Book.addABook = async function(request, response) {
 
 Book.deleteABook = async function(request, response) {
     const token = request.headers.authorization.split(' ')[1];
-    verifyToken(token, deleteBook(user));
+    verifyToken(token, deleteBook);
     
     async function deleteBook(user) {
         const indexNum = request.params.index;
+        console.log(indexNum);
         const index = parseInt(indexNum);
-        const name = user.name;
+        const email = user.email;
         
-        await BookModel.find({name }, (err, person) => {
+        await UserModel.find({email}, (err, person) => {
             if(err) console.log(err)
             const newBookArray = person[0].books.filter((book, i) => i !== index);
             person[0].books = newBookArray;
@@ -88,11 +98,10 @@ Book.updateABook = async function(request, repsonse) {
     async function updateBook(user) {
         const indexNum = request.params.index;
         const newBook = request.body.newBook;
-        const email = request.body.email;
-        const name = user.name; 
+        const email = user.email; 
         console.log({indexNum, newBook, email})
 
-        await BookModel.find({ name }, (err, person) => {
+        await UserModel.find({ email }, (err, person) => {
             if(err) console.error(err);
             person[0].books.splice(indexNum, 1, newBook);
             person[0].save();
