@@ -91,19 +91,19 @@ Book.deleteABook = async function(request, response) {
     }
 }
 
-Book.updateABook = async function(request, repsonse) { 
-    const token = request.headers.authroization.split(' ')[1]; 
-    verifyToken(token, updateBook(user));
+Book.updateABook = async function(request, response) { 
+    const token = request.headers.authorization.split(' ')[1]; 
+    verifyToken(token, updateBook);
 
     async function updateBook(user) {
-        const indexNum = request.params.index;
-        const newBook = request.body.newBook;
+        const index = parseInt(request.params.index);
+        const newBook = {name: request.query.updateName, description: request.query.updateDescription, status: request.query.updateStatus};
         const email = user.email; 
-        console.log({indexNum, newBook, email})
+        console.log({index, newBook, email})
 
         await UserModel.find({ email }, (err, person) => {
             if(err) console.error(err);
-            person[0].books.splice(indexNum, 1, newBook);
+            person[0].books.splice(index, 1, newBook);
             person[0].save();
             response.send(person[0].books);
         })

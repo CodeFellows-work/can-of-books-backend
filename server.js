@@ -34,6 +34,6 @@ db.once('open', () => {
 app.get('/books', Book.getAllBooks);
 app.post('/books', Book.addABook);
 app.delete('/books/:index', Book.deleteABook);
-app.put('./books/:index', Book.updateABook);
+app.put('/books/:index', Book.updateABook);
 
 app.listen(PORT, () => console.log(`SERVER IS UP on ${PORT}`));
